@@ -1,12 +1,33 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
-import RopeMainController from '@/components/ropeMainController'
+import Head from 'next/head';
+import Image from 'next/image';
+import { Inter } from 'next/font/google';
+import styles from '@/styles/Home.module.css';
+import RopeMainController from '@/components/ropeMainController';
+import { useDispatch, useSelector } from 'react-redux';
+import { RopeFlow, incrementJumps, selectRopeState } from '@/store/ropeSlice';
+import { useEffect, useMemo } from 'react';
+import PendingSignboard from '@/components/pendingSignboard';
+import ResultBoard from '@/components/resultBoard';
+import io from 'socket.io-client';
+import useJump from '@/hooks/useJumpService';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export default function Home() {
+  const dispatch = useDispatch();
+  const ropeState = useSelector(selectRopeState);
+
+  const signboard = useMemo(() => {
+    switch (ropeState) {
+      case RopeFlow.NONE:
+        return <></>;
+      case RopeFlow.PENDING:
+        return <PendingSignboard />;
+      case RopeFlow.FINISHED:
+        return <ResultBoard />;
+    }
+  }, [ropeState]);
+
   return (
     <>
       <Head>
@@ -16,8 +37,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${styles.main} ${inter.className}`}>
+        {signboard}
         <RopeMainController />
       </main>
     </>
-  )
+  );
 }

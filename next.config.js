@@ -1,6 +1,6 @@
 var redis = require('redis');
 global.redisContext = redis.createClient(6379, '127.0.0.1');
-global.redisContext.set('color', 'red', redis.print);
+global.redisContext.set('sensor', '[]', redis.print);
 
 class _emitter {
   events;
@@ -20,6 +20,9 @@ class _emitter {
     this.events[event].forEach((listener) => {
       listener(arg);
     });
+  }
+  only(event, listener) {
+    this.events[event] = [listener];
   }
 }
 global.emitter = new _emitter();

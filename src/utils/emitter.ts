@@ -17,4 +17,16 @@ export class _emitter {
       listener(arg);
     });
   }
+  removeListener(event: string, listener: any) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event] = this.events[event].filter((l: any) => l !== listener);
+  }
+  removeAllListeners(event: string) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event] = [];
+  }
 }

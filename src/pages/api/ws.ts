@@ -15,13 +15,14 @@ const ioHandler = (req: any, res: any) => {
     });
     io.on('disconnect', (socket) => {
       //   socket.broadcast.emit('a user connected');
+      emitter.removeAllListeners('onJump');
     });
     res.socket.server.io = io;
     wsRef = io;
   } else {
     wsRef = res.socket.server.io;
   }
-  emitter.on('onJump', (arg: any) => {
+  emitter.only('onJump', (arg: any) => {
     if (!wsRef) return;
     console.log('Socket.io: 发送跳绳消息');
     wsRef.emit('onJump', arg);

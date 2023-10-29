@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setRopeState } from '@/store/ropeSlice';
 import useJumpService from '@/hooks/useJumpService';
+import axios from 'axios';
 
 export default function RopeMainController() {
   const dispatch = useDispatch();
@@ -84,11 +85,13 @@ export default function RopeMainController() {
         dispatch(setRopeState(RopeFlow.PENDING));
         dispatch(setBeginTime(Date.now()));
         dispatch(resetJumps());
+        axios.post('/api/asyncJumps', { jumps: 0, isJump: true });
         break;
       case RopeFlow.PENDING:
         dispatch(setRopeState(RopeFlow.FINISHED));
         dispatch(calculateTotalTime(Date.now()));
         dispatch(resetBeginTime());
+        axios.post('/api/asyncJumps', { jumps: 0, isJump: false });
         break;
       case RopeFlow.FINISHED:
         dispatch(setRopeState(RopeFlow.NONE));

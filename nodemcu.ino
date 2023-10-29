@@ -7,13 +7,27 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
-#define SERVER_IP "192.168.209.137:3000"
+#include <Arduino.h>
+#include <U8g2lib.h>
+
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
+
+#define SERVER_IP "192.168.31.244:3000"
 #ifndef STASSID
 // #define STASSID "zjby1401"
 // #define STAPSK "4000012999"
-#define STASSID "Xiaomi 13"
-#define STAPSK "1234567890"
+// #define STASSID "Xiaomi 13"
+// #define STAPSK "1234567890"
+#define STASSID "Qingyou-Studio-111"
+#define STAPSK "qingyou+1s"
 #endif
+
+U8G2_SSD1306_128X64_NONAME_F_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/14, /* data=*/13, /* cs=*/15, /* dc=*/2, /* reset=*/16);
 
 Adafruit_MPU6050 mpu;
 
@@ -103,6 +117,10 @@ void setup(void) {
   Serial.println(WiFi.localIP());
   Serial.println("");
 
+  // u8g2 oled
+  u8g2.begin();
+  Serial.println("U8G2-OLED: Ready.");
+
   delay(100);
 }
 
@@ -123,16 +141,28 @@ void loop() {
     http.begin(client, "http://" SERVER_IP "/api/sensor");
     http.addHeader("Content-Type", "application/json");
     int httpCode = http.POST("{\"x\":" + String(x) + ", \"z\":" + String(z) + "}");
-    http.end();
 
     if (httpCode > 0) {
-      // Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-      // if (httpCode == HTTP_CODE_OK) {
-      //   const String& payload = http.getString();
-      //   Serial.println("received payload:\n<<");
-      //   Serial.println(payload);
-      //   Serial.println(">>");
-      // }
+      if (httpCode == HTTP_CODE_OK) {
+        const String& payload = http.getString();
+        u8g2.clearBuffer();
+        if (payload == "STOPED") {
+          u8g2.setFont(u8g2_font_ncenB08_tr);
+          u8g2.drawStr(0, 20, "please visit ");
+          u8g2.drawStr(0, 33, SERVER_IP);
+          u8g2.drawStr(0, 46, "on your phone");
+          u8g2.drawStr(0, 59, "to begin Rope!");
+        } else {
+          u8g2.setFont(u8g2_font_ncenB14_tr);
+          u8g2.drawStr(0, 20, payload.c_str());
+          u8g2.setFont(u8g2_font_ncenB08_tr);
+          u8g2.drawStr(0, 37, "visit ");
+          u8g2.drawStr(0, 50, SERVER_IP);
+          u8g2.drawStr(0, 63, "on your phone!");
+        }
+        u8g2.sendBuffer();
+      }
+      http.end();
     } else {
       Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
     }

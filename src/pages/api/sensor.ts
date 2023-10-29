@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-export default function (req: NextApiRequest, res: NextApiResponse) {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
   const client = (global as any).redisContext;
   const emitter = (global as any).emitter;
 
@@ -10,8 +10,8 @@ export default function (req: NextApiRequest, res: NextApiResponse) {
 
   client.get('sensor', function (err: any, value: any) {
     const totalData = JSON.parse(value);
-    totalData.push(Math.abs(x) - 10 > 4);
-    if (totalData.length > 20) {
+    totalData.push(Math.abs(x) - 10 > 2);
+    if (totalData.length > 40) {
       totalData.shift();
     }
     let upCase = 0;
@@ -21,18 +21,23 @@ export default function (req: NextApiRequest, res: NextApiResponse) {
       }
     }
     if (upCase > 1) {
-      client.set('sensor', JSON.stringify([]));
+      client.set('sensor', JSON.stringify([false]));
       emitter.emit('onJump', Date.now());
       console.log('Jump!');
     } else client.set('sensor', JSON.stringify(totalData));
     // console.log('Got: ' + totalData);
   });
 
-  //   client.get('color', function (err: any, value: any) {
-  //     if (err) throw err;
-  //     console.log('Got: ' + value);
-  //     res.json({ value });
-  //   });
-  // emitter.emit('onJump', Date.now());
+  const val: any = await new Promise((resolve) => {
+    client.get('jumps', function (err: any, value: any) {
+      if (err) throw err;
+      resolve(JSON.parse(value));
+    });
+  });
+  if (val.isJump) {
+    res.status(200).send(`Current: ${val.data}`);
+  } else {
+    res.status(200).send(`STOPED`);
+  }
   res.end();
 }

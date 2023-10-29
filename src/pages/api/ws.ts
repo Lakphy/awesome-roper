@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 
 const ioHandler = (req: any, res: any) => {
   const emitter = (global as any).emitter;
+  const client = (global as any).redisContext;
 
   console.log('Socket.io: 新用户接入');
   let wsRef = res.socket.server.io;
@@ -24,12 +25,8 @@ const ioHandler = (req: any, res: any) => {
   }
   emitter.only('onJump', (arg: any) => {
     if (!wsRef) return;
-    console.log('Socket.io: 发送跳绳消息');
     wsRef.emit('onJump', arg);
   });
-  // setInterval(() => {
-  //   wsRef.emit('onJump', Date.now());
-  // }, 1234);
 
   res.end();
 };

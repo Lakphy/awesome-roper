@@ -1,4 +1,4 @@
-function kalmanFilter(inputArray) {
+function kalmanFilter(inputArray: number[]) {
   var processNoise = 0.01; // 过程噪声
   var measurementNoise = 0.1; // 测量噪声
   var state = 0; // 初始状态
@@ -21,10 +21,4 @@ function kalmanFilter(inputArray) {
   }
 
   return outputArray;
-}
-
-// 正弦测试数组
-let arr = [];
-for (let i = 0; i < 50; i++) {
-  // arr.push(Math.sin(i) * 10);
 }

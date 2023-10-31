@@ -10,6 +10,7 @@ import PendingSignboard from '@/components/pendingSignboard';
 import ResultBoard from '@/components/resultBoard';
 import io from 'socket.io-client';
 import useJump from '@/hooks/useJumpService';
+import HistoryBoard from '@/components/historyBoard';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,7 +21,7 @@ export default function Home() {
   const signboard = useMemo(() => {
     switch (ropeState) {
       case RopeFlow.NONE:
-        return <></>;
+        return <HistoryBoard></HistoryBoard>;
       case RopeFlow.PENDING:
         return <PendingSignboard />;
       case RopeFlow.FINISHED:

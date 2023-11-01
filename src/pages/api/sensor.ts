@@ -3,14 +3,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 export default async function (req: NextApiRequest, res: NextApiResponse) {
   const client = (global as any).redisContext;
   const emitter = (global as any).emitter;
-
-  // console.log('Sensor: Received a request from client');
-  // console.log(req.body);
   // const { x, z } = req.body;
-
-  // console.log(x);
-  emitter.emit('onJump', Date.now());
-  console.log('Jump!');
+  const { n } = req.query;
+  const num = parseInt(n as string);
+  // emitter.emit('onJump', Date.now());
+  for (let i = 0; i < num; i++) {
+    emitter.emit('onJump', Date.now());
+    console.log('Jump!');
+  }
 
   // client.get('sensor', function (err: any, value: any) {
   //   const totalData = JSON.parse(value);
@@ -40,7 +40,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
     });
   });
   if (val.isJump) {
-    res.status(200).send(`${val.data + 1}`);
+    res.status(200).send(`${val.data + num}`);
   } else {
     res.status(200).send(`STOPED`);
   }

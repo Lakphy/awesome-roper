@@ -76,10 +76,10 @@ int timeJet = 0;
 int netState = 1;
 
 // 卡尔曼滤波器参数
-float dt = 0.01;       // 时间步长
-float Q_angle = 0.001; // 过程噪声方差
-float Q_gyro = 0.003;  // 过程噪声方差
-float R_angle = 0.05;  // 测量噪声方差
+float dt = 0.01;   // 时间步长
+float Q_angle = 1; // 过程噪声方差
+float Q_gyro = 1;  // 过程噪声方差
+float R_angle = 1; // 测量噪声方差
 
 // 状态变量
 float pitch = 0;
@@ -89,6 +89,11 @@ float gyro_y_bias = 0;
 
 int8_t sensorBuffer[200] = {};
 int sensorIndex = 0;
+
+double sensorHistory = 0;
+double lowerSensor = 0;
+double upperSensor = 0;
+int8_t isUping = 1;
 
 // 卡尔曼滤波器矩阵
 float Xk[4][1] = {{0},
@@ -292,10 +297,30 @@ void loop()
 
     /* 打印输出姿态角度 */
     // Serial.print("Pitch: ");
-    // Serial.print(0);
-    // Serial.print(", ");
-    // Serial.println(pitch * 180 / PI, 2);
+    Serial.print(0);
+    Serial.print(", ");
+    Serial.println(pitch * 180 / PI, 2);
 
+    double currentSensor = pitch * 180 / PI;
+    if (isUping == 1)
+    {
+        if (currentSensor < sensorHistory)
+        {
+            isUping = 0;
+            upperSensor = sensorHistory;
+            if (upperSensor - lowerSensor > 20)
+                localCounts++;
+        }
+    }
+    else
+    {
+        if (currentSensor > sensorHistory)
+        {
+            isUping = 1;
+            lowerSensor = sensorHistory;
+        }
+    }
+    sensorHistory = currentSensor;
     // 往sensorBuffer最后写入数据
     if (sensorIndex == 200)
     {
@@ -310,7 +335,6 @@ void loop()
         sensorBuffer[sensorIndex] = pitch > 0 ? 1 : 0;
         sensorIndex++;
     }
-
     int haveUpCase = 0;
     for (int i = 0; i < sensorIndex - 1; i++)
     {
@@ -321,9 +345,8 @@ void loop()
     }
     if (haveUpCase >= 1)
     {
-        // Serial.println("************************************");
-        sensorIndex = 0;
-        localCounts++;
+        // sensorIndex = 0;
+        // localCounts++;
         // if ((WiFi.status() == WL_CONNECTED)) {
         //   WiFiClient client;
         //   HTTPClient http;
@@ -361,18 +384,18 @@ void loop()
     }
     else
     {
-        delay(20);
+        delay(10);
     }
     timeJet++;
     if (timeJet % 20 == 0 && netState == 1)
     {
         netState = 0;
         int queryStr = localCounts - remoteCounts;
-        Serial.print(String(queryStr));
-        Serial.print(", ");
-        Serial.print(localCounts);
-        Serial.print(", ");
-        Serial.println(remoteCounts);
+        // Serial.print(String(queryStr));
+        // Serial.print(", ");
+        // Serial.print(localCounts);
+        // Serial.print(", ");
+        // Serial.println(remoteCounts);
         aClient.init("GET", "http://" SERVER_IP "/api/sensor?n=" + String(queryStr), "n=" + String(queryStr));
         aClient.send();
         remoteCounts += queryStr;
@@ -412,7 +435,7 @@ void AsyncHttpClient::init(String type, String fullUrl, String query)
     _type = type;
     _fullUrl = fullUrl;
     _query = query;
-    Serial.println(_query);
+    // Serial.println(_query);
     getHostname(fullUrl);
 }
 
@@ -601,7 +624,7 @@ void AsyncHttpClient::send()
       // PostHeader = "GET " + _fullUrl + " HTTP/1.1\r\nHost: " + _hostname + ":3000\r\n\r\n";
       PostHeader = "GET /api/sensor?" + _query + " HTTP/1.1\r\nHost: " + _hostname + ":3000\r\n\r\n";
     }
-    Serial.println(PostHeader);
+    // Serial.println(PostHeader);
     client->write(PostHeader.c_str()); },
                        NULL);
 
